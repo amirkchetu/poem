@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<error-codes>
+
+	<error-code>
+		<category>Invalid</category>
+		<values>9100</values>
+		<message>Invalid card number, expiration date or security code.</message>
+		<detail>Verify that the card number, expiration date and the CVV2 or CVC data, if provided, is correct as this can cause a wide variety of host generated error responses.</detail>
+	</error-code>
+	<error-code>
+		<category>AccountNumber</category>
+		<values>9472</values>
+		<message></message>
+		<detail>Invalid account number.</detail>
+	</error-code>
+	<error-code>
+		<category>AccountNumber</category>
+		<values>9775</values>
+		<message></message>
+		<detail>The UTG is in offline mode.</detail>
+	</error-code>
+	<error-code>
+		<category>CardNumber</category>
+		<values>9801,9802,9819,9820,9822,9836,9842</values>
+		<message></message>
+		<detail>The most likely cause of this error is the card number entered is not valid.</detail>
+	</error-code>
+	<error-code>
+		<category>TokenUseNotAllowed</category>
+		<values>9835</values>
+		<message></message>
+		<detail>This account is not allowed to use tokens from the request account.</detail>
+	</error-code>
+	<error-code>
+		<category>UniqueId</category>
+		<values>9846</values>
+		<message></message>
+		<detail>Token not found in this account.</detail>
+	</error-code>
+	<error-code>
+		<category>ExpirationDate</category>
+		<values>9837</values>
+		<message></message>
+		<detail>Please correct the expiration date.</detail>
+	</error-code>
+	<error-code>
+		<category>Amount</category>
+		<values>9838</values>
+		<message></message>
+		<detail>Please correct the dollar amount or break the transaction up into smaller amounts that add up to the desired amount.</detail>
+	</error-code>
+	<error-code>
+		<category>CurrencyCode</category>
+		<values>9841</values>
+		<message></message>
+		<detail>The most likely cause of this error is you are attempting to change the currency code of a transaction that already has an approval code. Your processor does not allow this. You will need to void (delete) this transaction and create a new transaction to accomplish this task.</detail>
+	</error-code>
+	<error-code>
+		<category>Amount</category>
+		<values>9876</values>
+		<message></message>
+		<detail>Transaction amount exceeds maximum limit. Please enter a smaller amount or contact customer service to request a higher limit.</detail>
+	</error-code>
+	<error-code>
+		<category>AnotherProcess</category>
+		<values>9955</values>
+		<message></message>
+		<detail>The most likely cause of this error is either another process is working with this particular transaction or you pressed the &quot;Back&quot; and &quot;Submit&quot; buttons or the &quot;Refresh&quot; button. In either case, wait 30 seconds and retry your request.</detail>
+	</error-code>
+	<error-code>
+		<category>POS</category>
+		<values>9856</values>
+		<message>Debit Refund Failed</message>
+		<detail>The point of sale must be used to refund Debit transactions.</detail>
+	</error-code>
+	<error-code>
+		<category>ProcessorDown</category>
+		<values>9960,4003,9964</values>
+		<message>Processor is down.</message>
+		<detail>Your processor is down.</detail>
+	</error-code>
+	<error-code>
+		<category>TimeOut</category>
+		<values>9033,9902,9951,9961</values>
+		<message>Processor is down.</message>
+		<detail>Client socket time-out. Please check the internet connection.</detail>
+	</error-code>
+	<error-code>
+		<category>ServerUnAvailable</category>
+		<values>1001</values>
+		<message>Server is not available.</message>
+		<detail>Server not available. Please try later</detail>
+	</error-code>
+	<error-code>
+		<category>Other</category>
+		<values>9999</values>
+		<message></message>
+		<detail>Unknown Error</detail>
+	</error-code>
+	<error-code>
+		<category>PAGO</category>
+		<values>30001</values>
+		<message></message>
+		<detail>The most likely cause of this error is that the data provided does not meet PAGO requirements (invalid or missing data).</detail>
+	</error-code>
+
+</error-codes>

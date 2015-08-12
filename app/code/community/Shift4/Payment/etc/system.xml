@@ -1,0 +1,262 @@
+<?xml version="1.0"?>
+
+<config>
+    <sections>
+        <payment>
+            <groups>               				
+                <shift4_payments translate="label">					
+                    <comment>
+                        <![CDATA[
+                        <fieldset>
+                            <div class="shift4-notice">
+                                <div align="left"><div id="shift4-logo">&nbsp;</div></div>
+                                <div><a href="http://www.shift4.com" target="_blank">Click here to learn more</a><div>
+                            </div> 
+                        </fieldset>
+                        ]]>
+                    </comment>
+                    <label>Shift4 Secure Payments</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>40</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>					
+                    <frontend_class>complex</frontend_class>
+                    <fields>                   
+                        <shift4_payment type="group" translate="label">
+                            <label>Credit, Debit, or Gift Card (Shift4)</label>
+                            <frontend_type>text</frontend_type>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <sort_order>2</sort_order>
+                            <fields>
+                                <active translate="label">
+                                    <label>Enabled*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>adminhtml/system_config_source_yesno</source_model>
+                                    <sort_order>10</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[To enable Shift4 as a payment option available to your customer during the checkout process, select Yes. (This will allow to accept credit, debit and gift cards while keeping card holder data outside of your system)
+                                        . If no is selected, Shift4 will not be displayed as payment option during the checkout process]]>
+                                    </comment>
+                                </active>
+                                <title translate="label">
+                                    <label>Title*</label>
+                                    <frontend_type>text</frontend_type>							
+                                    <sort_order>11</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>validate-shift4-payment-title</validate>
+                                    <comment>
+                                        <![CDATA[If Shift4 is enabled as a payment option, it will be displayed to your customers using the text in the Title field. 
+                                        Leave the default text, "Credit, Debit or Gift Card (TRANSACTION SECURED BY i4Go<sup>®</sup>, A SHIFT4<sup>®</sup> PRODUCT)" or enter your own. 
+                                        Shift4 recommend the default text to be used so your customers know their card holder data is protected.]]>
+                                    </comment>
+                                </title>
+                                <processing_mode translate="label">
+                                    <label>Processing Mode*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>shift4/shift4_source_processingMode</source_model>
+                                    <sort_order>12</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <comment>
+                                        <![CDATA[If Shift4 is enabled as a payment option and you would like to test it, select Demo.
+                                        (Transactions processed in demo mode will not be available in <a href="http://www.dollarsonthenet.net/" target="_blank">DOLLARS ON THE NET<sup>®</sup></a>.) 
+                                        If you are ready to process real transactions, select Live. 
+                                        (All fields on this page must be properly configured in order to process real transactions, 
+                                        which will be available in DOLLARS ON THE NET.) 
+                                        ]]>
+                                    </comment>
+                                    <validate>required-entry</validate>
+                                </processing_mode>
+                                <!--<use_utg translate="label">
+                                    <label>Enable UTG*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>adminhtml/system_config_source_yesno</source_model>
+                                    <sort_order>13</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[Shift4 recommends the Universal Transaction Gateway<sup>®</sup> (UTG<sup>®</sup>) be used because it protects the transport of sensitive financial data from your system to DOLLARS ON THE NET®. 
+                                        If Shift4 is enabled as a payment option and you are using a UTG, select Yes. 
+                                        If you are not using a UTG and are communicating with DOLLARS ON THE NET via direct server-to-server post, select No. ]]>
+                                    </comment>
+                                </use_utg>-->
+                                <server_addresses translate="label">
+                                    <label>Server Addresses*</label>
+                                    <frontend_type>textarea</frontend_type>
+                                    <frontend_model>Shift4_Payment_Block_Adminhtml_System_Config_RenderResetButton</frontend_model>
+                                    <sort_order>14</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[ 
+                                        <span id="utg_yes" style="display:block">If the Universal Transaction Gateway<sup>®</sup> (UTG<sup>®</sup>) is in use, the Server Addresses field will be populated with a comma-separated list of UTG IP addresses and port numbers.</span>
+                                        <span id="utg_no" style="display:none">If the Universal Transaction Gateway<sup>®</sup> (UTG<sup>®</sup>) is not in use, the Server Addresses field will be populated with a comma-separated list of server addresses.</span>
+                                        <span id="enabled_no" style="display:none">If the Universal Transaction Gateway<sup>®</sup> (UTG<sup>®</sup>) is in use, the Server Addresses field will be populated with a comma-separated list of UTG IP addresses and port numbers. If the UTG is not in use, the Server Addresses field will be populated with a comma-separated list of server addresses.</span>
+                                        <span id="processing_mode_demo" style="display:none">If the Universal Transaction Gateway<sup>®</sup> (UTG<sup>®</sup>) is in use, the Server Addresses field will be populated with a comma-separated list of UTG IP addresses and port numbers. If the UTG is not in use, the Server Addresses field will be populated with a comma-separated list of server addresses.</span>
+                                        ]]>
+                                    </comment>
+                                </server_addresses>			
+                                <auth_token translate="label">
+                                    <label>Auth Token*</label>
+                                    <frontend_model>Shift4_Payment_Block_Adminhtml_System_Config_RenderExchangeButton</frontend_model>
+                                    <frontend_type>text</frontend_type>                       
+                                    <sort_order>15</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[ For instructions on generating an Auth Token, see the Account Administrator Guide located in the Help section of DOLLARS ON THE NET<sup>®</sup>. 
+                                        After the Auth Token is generated, paste it into the Auth Token field and click Exchange. 
+                                        This will exchange your Auth Token for an Access Token, allowing you to process transactions through DOLLARS ON THE NET for that Merchant ID. 
+                                        Your Access Token will be displayed masked in the Access Token field below.]]>
+                                    </comment>
+                                </auth_token>
+                                <masked_access_token translate="label">
+                                    <label>Access Token*</label>
+                                    <frontend_type>text</frontend_type>
+                                    <frontend_model>Shift4_Payment_Block_Adminhtml_System_Config_AccessTokenUnMask</frontend_model>
+                                    <sort_order>16</sort_order>  
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>  
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[ An Access Token allows you to process transactions through DOLLARS ON THE NET<sup>®</sup> 
+                                        in relation to the Merchant ID with which it corresponds. You must use the Auth Token field above 
+                                        to generate an Access Token, which will be displayed masked in this field.]]>
+                                    </comment>               			
+                                </masked_access_token>
+														
+                                <access_token translate="label">
+                                    <label></label>
+                                    <frontend_type>hidden</frontend_type>
+                                    <frontend_model>Shift4_Payment_Block_Adminhtml_System_Config_AccessTokenDisabled</frontend_model>                      
+                                    <sort_order>16</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>			
+                                </access_token>
+					
+                                <logging translate="label">
+                                    <label>Enable Logging*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>shift4/shift4_source_loggingOption</source_model>
+                                    <sort_order>17</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[If Shift4 is enabled as a payment option and you would like to log all 
+                                        communication with DOLLARS ON THE NET<sup>®</sup>, select Log All Communications. 
+                                        (This is the setting Shift4 recommends.) If you only want to log communication problems with DOLLARS ON THE NET<sup>®</sup>, select Log Problems Only. 
+                                        If you do not want any communication with DOLLARS ON THE NET<sup>®</sup> logged, select Off. 
+                                        (The two log files, Shift4.log and Shift4-error.log, can be found by navigating to the …/Magento/var/log folder.)  ]]>
+                                    </comment>
+                                </logging>
+                                <!--<card_on_file translate="label">
+                                    <label>Enable Card on File*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>adminhtml/system_config_source_yesno</source_model>
+                                    <sort_order>18</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[ If Shift4 is enabled as a payment option and you would like your customers to be able to manage their cardholder data, 
+                                        select Yes. (This will allow your customers to save their cardholder data during checkout, as well
+                                        as edit and add new cardholder data using Manage My Cards.
+                                        All cardholder data is tokenized to keep real cardholder data out of your system.) 
+                                        If No is selected, your customers will not be able to manage their cardholder data and they will have to reenter their cardholder data each time they check out.]]>
+                                    </comment>
+                                </card_on_file>-->
+                                <payment_action translate="label">
+                                    <label>Transaction Mode*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>shift4/shift4_source_paymentAction</source_model>
+                                    <sort_order>19</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                    <comment>
+                                        <![CDATA[If Shift4 is enabled as a payment option and you would like to authorize and finalize the transaction at the same time, select Immediate Charge. 
+                                        If you would like to authorize the transaction and manually finalize the transaction at a later time in <a href="http://www.dollarsonthenet.net/" target="_blank">DOLLARS ON THE NET<sup>®</sup></a>, select Book and Ship. 
+                                        (The Book and Ship option is commonly used by merchants who need to ship the customer’s order before finalizing the transaction. 
+                                        These types of transactions should be finalized as soon as possible in DOLLARS ON THE NET as authorizations can expire.)  ]]>
+                                    </comment>
+                                </payment_action>  
+                                <support_avs translate="label">
+                                    <label>Support AVS*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>adminhtml/system_config_source_yesno</source_model>
+                                    <sort_order>20</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <comment>
+                                        <![CDATA[If Shift4 is enabled as a payment option and you would like enable the Address Verification System for transaction then select Yes else set it to No.
+                                        ]]>
+                                    </comment>
+                                    <validate>required-entry</validate>
+                                </support_avs>
+                            </fields>
+                        </shift4_payment>
+                        <shift4_payment_cardsaved type="group" translate="label">
+                            <label>My Saved Cards (Shift4)</label>
+                            <frontend_type>text</frontend_type>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <sort_order>3</sort_order>
+                            <fields>
+                                <active translate="label">
+                                    <label>Enabled*</label>
+                                    <frontend_type>select</frontend_type>
+                                    <source_model>adminhtml/system_config_source_yesno</source_model>
+                                    <sort_order>10</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>  
+                                    <comment>
+                                        <![CDATA[ If Shift4 is enabled as a payment option and you would like your customers to be able to manage their cardholder data, 
+                                        select Yes. (This will allow your customers to save their cardholder data during checkout, as well
+                                        as edit and add new cardholder data using Manage My Cards.
+                                        All cardholder data is tokenized to keep real cardholder data out of your system.) 
+                                        If No is selected, your customers will not be able to manage their cardholder data and they will have to reenter their cardholder data each time they check out.]]>
+                                    </comment>                    
+                                </active>
+                                <title translate="label">
+                                    <label>Title*</label>
+                                    <frontend_type>text</frontend_type>							
+                                    <sort_order>11</sort_order>
+                                    <show_in_default>1</show_in_default>
+                                    <show_in_website>1</show_in_website>
+                                    <show_in_store>1</show_in_store>
+                                    <validate>required-entry</validate>
+                                </title>								
+                            </fields>
+                        </shift4_payment_cardsaved>		                                             
+                    </fields>
+                </shift4_payments> 
+            </groups>
+        </payment>
+    </sections>
+</config>

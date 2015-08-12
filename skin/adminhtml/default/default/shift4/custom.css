@@ -1,0 +1,6 @@
+.collapse{ margin:0; padding:0 0 0 13px; background:url(../images/note_cell_bg.gif) 1px 6px no-repeat; font-size:11px;cursor:pointer; }
+.expand{ margin:0; padding:0 0 0 13px; background:url(../images/note_bg.gif) 1px 6px no-repeat; font-size:11px;cursor:pointer; }
+.collapse > span , .expand > span {
+    cursor: default;
+}
+#shift4-logo{ background:url(../shift4/images/secured-by-i4go.png) no-repeat; padding:115px 0 }

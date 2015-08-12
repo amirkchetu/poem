@@ -1,0 +1,133 @@
+<script src="<?php echo $this->getSkinUrl('shift4/jquery/jquery-2.0.0.min.js');?>" type="text/javascript"></script>
+<script src="<?php echo $this->getSkinUrl('shift4/jquery/noconflict.js');?>" type="text/javascript"></script>
+<script src="https://i4m.i4go.com/js/jquery.i4goTrueToken.1.0.0.js" type="text/javascript"></script>
+<div id="i4goFrame"></div>
+
+<script type="text/javascript">
+    //<![CDATA[
+    $jq = jQuery.noConflict();
+    $j = jQuery.noConflict();
+    //]]>
+</script>
+<?php $iFrameCss = '"body{font-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;background-color: \"#aaa\"; borderLeft: \"5px solid #ccc\"}",
+	"label{color:#636363;font-size: 13px;font-weight: 600;}",
+	".form-control{max-width: 100%; width: 365px;height: 30px;padding: 0 8px; margin-bottom: 10px; background: #ffffff none repeat scroll 0 0;",
+	"border: 1px solid silver; border-radius: 2px; font-size: 15px;}",
+	"#i4go_expirationMonth {width: 165px;}",
+	"#i4go_expirationYear {width: 165px;}",
+	".'.$this->getFormId().' {height:auto;}",
+	"#i4go_cvv2Code {width: 105px;}",
+	"#i4go_cardNumber {width: 347px;}",
+	".btn-secure {background: #3399cc; border: 0 none;color: #ffffff;display: inline-block;font-family: \"Raleway", "Helvetica Neue\",Verdana,Arial,sans-serif;",
+	"font-size: 13px;font-weight: normal;line-height: 19px;padding: 7px 15px;text-align: center;text-transform: uppercase;vertical-align: middle;white-space: nowrap;}",
+	".btn-secure:hover {background-color: #297aa3; color: #ffffff;outline: medium none; cursor: pointer;}"';
+
+if ($this->getIframeCssRules()) {
+    $iFrameCss = $this->getIframeCssRules();
+}
+?>
+<form id="<?php echo $this->getFormId(); ?>"></form>
+<script type="text/javascript">
+    //<![CDATA[
+    $jq(function() {
+        $jq("#<?php echo $this->getFormId(); ?>").i4goTrueToken({
+            server: "<?php echo $this->getI4goServer(); ?>",
+            accessBlock: "<?php echo $this->getI4goAccessBlock(); ?>", // REQUIRED - get this from access.i4go.com call (or i4access.shift4test.com)
+            self: document.location,
+            template: "plain",
+            url: "https://i4m.shift4test.com", // i4go server
+            // If not provided (the default), value will be calculated based on the "server" parameter
+            // Defaults to production
+            // Must override for testing and certification to https://form.shift4test.com
+            frameContainer: "i4goFrame", // Only used if frameName does not exist
+            frameName: "", // Auto-assigned if left empty
+            frameAutoResize: true,
+            frameClasses: "",
+            formAutoSubmitOnSuccess: false,
+            formAutoSubmitOnFailure: false,
+            onSuccess: function(form, data) {
+                console.log("(i4goTrueToken) onSuccess()", data);
+                // Save the date
+                if (data.i4go_response == 'SUCCESS' && data.i4go_responsecode == 1) {
+
+                    var formData = {
+                        payment: {
+                            cc_type: data.i4go_cardtype,
+                            cc_exp_month: data.i4go_expirationmonth,
+                            cc_exp_year: data.i4go_expirationyear,
+                            card_token: data.i4go_uniqueid,
+                            method: '<?php echo Shift4_Payment_Model_SecurePayment::METHOD_CODE; ?>'
+                        }
+                    };
+                    $jq.ajax({
+                        beforeSend: function(xhrObj) {
+                            xhrObj.setRequestHeader("Accept", "application/json");
+                            $jq('#i4go_error').html('');
+                        },
+                        url: "<?php echo $this->getSaveUrl(); ?>",
+                        type: "POST",
+                        data: formData,
+                        success: function(response, textStatus, jqXHR)
+                        {
+                            //data - response from server
+                            var json = $jq.parseJSON(response);
+                            console.log("(i4goTrueToken save) onSuccess()", json);
+                            if (json.error == false) {
+                                // token was saved successfully
+                                if (json.redirect == true) {
+                                    window.location = json.redirect_url;
+                                }
+                            } else {
+                                displayError(json.error_text);
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown)
+                        {
+                            displayError(errorThrown);
+                        }
+                    });
+                } else {
+                    displayError('An error occured during the request.');
+                }
+            },
+            onFailure: function(form, data) {
+                alert('onFailure occured');
+                console.warn("(i4goTrueToken) onFailure()", data);
+                displayError('The request could not be completed.');
+            },
+            onComplete: function(form, data) {
+                $jq('#i4go_error').html('');
+                console.log("(i4goTrueToken) onComplete()", data);
+            },
+            acceptedPayments: "AX,DC,GC,JC,MC,NS,VS",
+            // Auto populated form fields. Precedence: field name, field id
+            formPaymentResponse: "i4go_response",
+            formPaymentResponseCode: "i4go_responsecode",
+            formPaymentResponseText: "i4go_responsetext",
+            formPaymentMaskedCard: "i4go_maskedcard",
+            formPaymentToken: "i4go_uniqueid",
+            formPaymentExpMonth: "i4go_expirationmonth",
+            formPaymentExpYear: "i4go_expirationyear",
+            formPaymentType: "i4go_cardtype",
+            cardType: {classes: "", label: "Card Type", placeholder: "", message: "This is a required field.", required: true},
+            cvv2Code: {classes: "", label: "Card Verification Number", placeholder: "", message: "This is a required field", required: true},
+            cardNumber: {classes: "", label: "Card Number", placeholder: "Card Number", message: "This is a required field", required: true},
+            expirationMonth: {classes: "", label: "Expiration Date", placeholder: "Expiration Date", message: "This is a required field."},
+            payments: [
+                {type: "VS", name: "Visa"},
+                {type: "MC", name: "MasterCard"},
+                {type: "AX", name: "American Express"},
+                {type: "DC", name: "Diners Club"},
+                {type: "NS", name: "Discover"},
+                {type: "JC", name: "JCB"},
+                {type: "GC", name: "Gift Card"}
+            ],          
+            cssRules: [<?php echo $iFrameCss; ?>]          
+        });
+    });
+
+    function displayError(error_string) {
+        $jq('#i4go_error').html('<ul class="messages"><li class="error-msg"><ul><li><span>' + error_string + '</span></li></ul></li></ul>');
+    }
+    //]]>
+</script>

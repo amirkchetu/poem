@@ -1,0 +1,76 @@
+<?php
+/**
+ * Customer's stored cards listing
+ */
+/** @var $this Shift4_Payment_Block_Customer_Storedcard */
+$_storedCardHelper = Mage::helper('shift4/storedcard');
+
+?>
+<div class="page-title">
+    <h1><?php echo $this->__('Manage saved cards') ?></h1>
+</div>
+
+<?php echo $this->getMessagesBlock()->getGroupedHtml() ?>
+
+<div class="box-account">
+    <?php $_storedCards = $this->getStoredCards(); ?>
+    <div class="box-head">
+        <h2><?php echo $this->__('Credit Cards') ?></h2>
+    </div>
+    <?php if ($_storedCards && ($_storedCards->count() > 0)): ?>
+        <table class="data-table" id="stored-cards-table">
+            <col />
+            <col width="1" />
+            <col width="1" />
+            <col width="1" />
+            <thead>
+                <tr>
+                    <th><?php echo $this->__('Credit Card') ?></th>
+                    <th><?php echo $this->__('Last Transaction ID') ?></th>
+                    <th><?php echo $this->__('Expiration Date') ?></th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($_storedCards as $_storedCard): ?>
+                    <?php $transId = ($_storedCard->getTransactionId()) ? $_storedCard->getTransactionId() : 'N/A'; ?>
+                    <tr>
+                        <td><?php echo $_storedCardHelper->translateCcType($_storedCard->getCcType()) ?> (<?php echo sprintf('xxxx-%s', $_storedCard->getCcLast4()) ?>)</td>
+                        <td><?php echo $transId; ?></td>
+                        <td class="a-center"><span class="nobr"><?php echo $_storedCard->getCcExpMonth() ?>/<?php echo $_storedCard->getCcExpYear() ?></span></td>
+                        <td class="a-center">
+                            <span class="nobr">
+                                <a href="<?php echo $this->getDeleteUrl($_storedCard) ?>" onclick="return confirm('<?php echo $this->__('Are you sure?') ?>');"><?php echo $this->__('Delete') ?></a>
+                            </span>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <script type="text/javascript">decorateTable('stored-cards-table');</script>
+    <?php else: ?>
+        <p><?php echo $this->__('No saved cards'); ?></p>
+    <?php endif; ?>
+</div>
+
+<div id="add-card-area">
+    <br />
+    <span id="i4go_error"></span>
+    <div id="addcard" class="card-new-container" style="display:none; padding-top:30px;">      
+        <form name="addcardform" id="<?php echo $this->getFormId(); ?>"></form>
+    </div>
+    <button style="float:right" class="button add-new" title="Add Card" type="button" onclick="showForm()"><span><span>Add Card</span></span></button>
+</div>
+<div class="i4goFrame-container">
+    <?php echo $this->getChildHtml('i4go_iframe'); ?>
+</div>
+<script>
+    //<![CDATA[
+        jQuery('.i4goFrame-container').hide();
+        function showForm(){
+            jQuery('.button.add-new').hide();
+            jQuery('.i4goFrame-container').slideDown('slow');
+        }
+    //]]>
+</script>    

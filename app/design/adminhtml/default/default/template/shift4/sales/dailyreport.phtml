@@ -1,0 +1,551 @@
+<?php
+$to = "";
+$from = "";
+$show_order_statuses = 0;
+$orserstatus = "";
+$payment_method_cc = Shift4_Payment_Model_SecurePayment::METHOD_CODE;
+$payment_method_stored = Shift4_Payment_Model_UserCardStored::METHOD_CODE;
+$result_order = 0;
+$filter_type = '';
+$orders_row = array();
+if (!empty($_REQUEST['from']) && !empty($_REQUEST['to'])) {
+
+    $filter_type = $_REQUEST['filter_type'];
+    $from = $_REQUEST['from'];
+    $to = $_REQUEST['to'];
+    $from_date = date('Y-m-d' . ' 00:00:00', strtotime($from));
+    $to_date = date('Y-m-d' . ' 23:59:59', strtotime($to));
+
+
+    $filter_model = ($filter_type == 'shipping_date') ? 'sales/order_shipment_collection' : 'sales/order_collection';
+    if ($_REQUEST['show_order_statuses'] > 0) {
+        $orserstatus = $_REQUEST['order_statuses'];
+        
+        $_orderCollections = Mage::getResourceModel($filter_model);
+        $_orderCollections->addAttributeToSelect('*');
+        $_orderCollections->addFieldToFilter('created_at', array('from' => $from_date, 'to' => $to_date));
+        if ($filter_type == 'order_date') {
+            $_orderCollections->addFieldToFilter('status', $orserstatus);
+        }
+        $_orderCollections->addFieldToFilter('created_at', array('from' => $from_date, 'to' => $to_date));
+        $_orderCollections->join(array('payment' => 'sales/order_payment'), 'main_table.entity_id=payment.parent_id', array('payment_method' => 'payment.method'));
+
+        $_orderCollections->addFieldToFilter(
+                array('payment.method', 'payment.method'), array(
+            array('eq' => $payment_method_cc),
+            array('eq' => $payment_method_stored)
+        ));
+       
+        $_orderCollections->setOrder('created_at', 'desc');
+        $_orderCollections->load();
+    } else {
+        $_orderCollections = Mage::getResourceModel($filter_model)
+                ->addAttributeToSelect('*')
+                ->addFieldToFilter('created_at', array('from' => $from_date, 'to' => $to_date))
+                ->join(array('payment' => 'sales/order_payment'), 'main_table.entity_id=payment.parent_id', array('payment_method' => 'payment.method', 'cc_last4'))
+                ->addFieldToFilter(
+                        array('payment.method', 'payment.method'), array(
+                    array('eq' => $payment_method_cc),
+                    array('eq' => $payment_method_stored)
+                ))
+                ->setOrder('created_at', 'desc')
+                ->load();
+    }
+
+    $show_order_statuses = $_REQUEST['show_order_statuses'];
+    $result_order = $_orderCollections->count();
+    
+    $total_card_vi = 0;
+    $total_card_ax = 0;
+    $total_card_gc = 0;
+    $total_card_mc = 0;
+    $total_card_dc = 0;
+    $total_card_ns = 0;
+    $total_card_jc = 0;
+
+    $total_amount_vi = 0;
+    $total_amount_ax = 0;
+    $total_amount_mc = 0;
+    $total_amount_gc = 0;
+    $total_amount_dc = 0;
+    $total_amount_ns = 0;
+    $total_amount_jc = 0;
+
+    $total_refund_vi = 0;
+    $total_refund_ax = 0;
+    $total_refund_mc = 0;
+    $total_refund_gc = 0;
+    $total_refund_dc = 0;
+    $total_refund_ns = 0;
+    $total_refund_jc = 0;
+
+    $usedCards = array();
+    $availableCcTypes = Mage::getSingleton('payment/config')->getCcTypes();
+    foreach ($_orderCollections as $single_order) {
+        if (($filter_type == 'shipping_date')) {
+            $_orderId = $single_order->getOrderId();
+        } else {
+            $_orderId = $single_order->getId();
+        }
+        
+        //var_dump($_orderId);die;
+
+        $myOrder = Mage::getModel('sales/order');
+        $myOrder->load($_orderId);
+        $myOrder->loadByIncrementId($myOrder->getIncrementId());
+        $customer_name = $myOrder->getCustomerFirstname() . ' ' . $myOrder->getCustomerLastname();
+        $customer_email = "";
+        if ($custoer_id = $myOrder->getCustomerId()) {
+            $customer = Mage::getModel('customer/customer')->load($custoer_id);
+            $customer_email = $customer->getEmail();
+        }
+
+        if (empty($customer_email)) {
+            $customer_email = $myOrder->getCustomerEmail();
+        }
+        $payment_info = $myOrder->getPayment();
+        $methodInstance = $payment_info->getMethodInstance();
+        $cardStorage = $methodInstance->getCardsStorage($payment_info);
+        foreach ($cardStorage->getCards() as $card) {            
+            $proccessed_amount = $card->getProcessedAmount();
+            $refunded_amount = $card->getRefundedAmount();
+            $invoice_id = $card->getShift4InvoiceId();
+            $last_4no = $card->getCcLast4();
+            $card_type = $card->getCcType();
+            $transType = $card->getTransactionType();
+            if ($transType == 'AUTH_CAPTURE') {
+                $transType = 'Sale';
+            }
+            if (strtolower($transType) == 'refund') {
+                $amount = '<span style="color:red;">('.Mage::helper('core')->currency($refunded_amount, true, false).')</span>';
+            } else {
+                $amount = Mage::helper('core')->currency($proccessed_amount, true, false);
+            }
+            switch ($card_type) {
+                case 'VS':
+                    $total_card_vi += 1;
+                    $total_amount_vi += $proccessed_amount;
+                    $total_refund_vi += $refunded_amount;
+
+                    $usedCards['VS'] = array('total' => $total_card_vi,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_vi,
+                        'refund' => $total_refund_vi
+                    );
+                    break;
+                case 'AX':
+                    $total_card_ax += 1;
+                    $total_amount_ax += $proccessed_amount;
+                    $total_refund_ax += $refunded_amount;
+
+                    $usedCards['AX'] = array('total' => $total_card_ax,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_ax,
+                        'refund' => $total_refund_ax
+                    );
+                    break;
+                case 'MC':
+                    $total_card_mc += 1;
+                    $total_amount_mc += $proccessed_amount;
+                    $total_refund_mc += $refunded_amount;
+
+                    $usedCards['MC'] = array('total' => $total_card_mc,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_mc,
+                        'refund' => $total_refund_mc
+                    );
+                    break;
+                case 'YC':
+                    $total_card_gc += 1;
+                    $total_amount_gc += $proccessed_amount;
+                    $total_refund_gc += $refunded_amount;
+
+                    $usedCards['YC'] = array('total' => $total_card_gc,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_gc,
+                        'refund' => $total_refund_gc
+                    );
+                    break;
+                case 'DC':
+                    $total_card_dc += 1;
+                    $total_amount_dc += $proccessed_amount;
+                    $total_refund_dc += $refunded_amount;
+
+                    $usedCards['DC'] = array('total' => $total_card_dc,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_dc,
+                        'refund' => $total_refund_dc
+                    );
+                    break;
+                case 'NS':
+                    $total_card_ns += 1;
+                    $total_amount_ns += $proccessed_amount;
+                    $total_refund_ns += $refunded_amount;
+
+                    $usedCards['NS'] = array('total' => $total_card_ns,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_ns,
+                        'refund' => $total_refund_ns
+                    );
+                    break;
+                case 'JC':
+                    $total_card_jc += 1;
+                    $total_amount_jc += $proccessed_amount;
+                    $total_refund_jc += $refunded_amount;
+
+                    $usedCards['JC'] = array('total' => $total_card_jc,
+                        'label' => $availableCcTypes[$card_type],
+                        'amount' => $total_amount_jc,
+                        'refund' => $total_refund_jc
+                    );
+            }
+            
+            $orders_row[] = array('trans_type' => $transType,
+                'invoice' => $invoice_id,
+                'order_id' => $myOrder->getIncrementId(),
+                'date' => date("m/d/Y", strtotime($myOrder->getCreatedAt())),
+                'card_type' => $card_type,
+                'card_number' => "xxxx-" . $last_4no,
+                'amount' => $amount,
+                'customer_name' => utf8_decode($customer_name));
+        }
+    }
+}
+?>
+<div id="anchor-content" class="middle">
+    <div id="page:main-container">
+        <div class="content-header">
+            <table cellspacing="0">
+                <tbody>
+                    <tr>
+                        <td style="width:50%;"><h3 class="icon-head head-report-sales-sales"><?php echo $this->__("Custom Sales Order Report"); ?></h3></td>
+                        <td class="form-buttons"><button style="" onclick="filterFormSubmit.submit();" class="scalable " type="button" id="id_<?php echo Mage::getSingleton('core/session')->getFormKey() ?>"><span>Show Report</span></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <div class="entry-edit">
+                <form method="get" action="<?php echo Mage::helper('core/url')->getCurrentUrl(); ?>" id="filter_form">
+                    <?php /* ?><input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /><?php */ ?>
+                    <div class="entry-edit-head">
+                        <h4 class="icon-head head-edit-form fieldset-legend">Filter</h4>
+                        <div class="form-buttons"></div>
+                    </div>
+                    <div id="sales_report_base_fieldset" class="fieldset">
+                        <div class="hor-scroll">
+                            <table cellspacing="0" class="form-list">
+                                <tbody>
+                                    <tr>
+                                        <td class="label"><label for="sales_report_filter_type">Filter By <span class="required">*</span></label></td>
+                                        <td class="value">
+                                            <select class="required-entry select" name="filter_type" id="sales_report_filter_type" onchange="changeStatusOption(this.value);">
+                                                <option <?php echo ($filter_type == "order_date") ? 'selected="selected"' : ''; ?> value="order_date">Order Date</option>
+                                                <option <?php echo ($filter_type == "shipping_date") ? 'selected="selected"' : ''; ?> value="shipping_date">Shipping Date</option>
+                                            </select>
+                                    </tr>
+                                    <tr>
+                                        <td class="label"><label for="sales_report_from">From <span class="required">*</span></label></td>
+                                        <td class="value"><input type="text" style="width:110px !important;" class=" required-entry input-text" title="From" value="<?php echo $from; ?>" id="sales_report_from" name="from" />
+                                            <img style="" title="Select Date" id="sales_report_from_trig" class="v-middle" alt="" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB); ?>skin/adminhtml/default/default/images/grid-cal.gif"> 
+                                            <script type="text/javascript">
+                            //<![CDATA[
+                            Calendar.setup({
+                                inputField: "sales_report_from",
+                                ifFormat: "%m/%e/%y",
+                                showsTime: false,
+                                button: "sales_report_from_trig",
+                                align: "Bl",
+                                singleClick: true
+                            });
+                            //]]>
+                                            </script></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label"><label for="sales_report_to">To <span class="required">*</span></label></td>
+                                        <td class="value"><input type="text" style="width:110px !important;" class=" required-entry input-text" title="To" value="<?php echo $to; ?>" id="sales_report_to" name="to" />
+                                            <img style="" title="Select Date" id="sales_report_to_trig" class="v-middle" alt="" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB); ?>skin/adminhtml/default/default/images/grid-cal.gif"> 
+                                            <script type="text/javascript">
+                                                //<![CDATA[
+                                                Calendar.setup({
+                                                    inputField: "sales_report_to",
+                                                    ifFormat: "%m/%e/%y",
+                                                    showsTime: false,
+                                                    button: "sales_report_to_trig",
+                                                    align: "Bl",
+                                                    singleClick: true
+                                                });
+                                                //]]>
+                                            </script></td>
+                                    </tr>
+                                    <tr id="hide_for_shipping_date" <?php echo ($filter_type == "shipping_date") ? 'class="no-display"' : ''; ?>>
+                                        <td class="label"><label for="sales_report_show_order_statuses">Order Status</label></td>
+                                        <td class="value"><select class=" select" name="show_order_statuses" id="sales_report_show_order_statuses">
+                                                <option <?php echo ($show_order_statuses == 0) ? 'selected="selected"' : ''; ?> value="0">Any</option>
+                                                <option <?php echo ($show_order_statuses == 1) ? 'selected="selected"' : ''; ?> value="1">Specified</option>
+                                            </select>
+                                            <p id="note_show_order_statuses" class="note"><span>Applies to Any of the Specified Order Statuses</span></p></td>
+                                    </tr>
+                                    <tr id="hide_status_for_shipping_date" style="display: none;">
+                                        <td class="label"></td>
+                                        <td class="value">
+                                            <select multiple="multiple" class=" select multiselect" size="10" name="order_statuses[]" id="sales_report_order_statuses">
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('pending', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="pending">Pending</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('processing', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="processing">Processing</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('holded', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="holded">On Hold</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('complete', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="complete">Complete</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('closed', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="closed">Closed</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('canceled', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="canceled">Canceled</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('fraud', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="fraud">Suspected Fraud</option>
+                                                <option <?php
+                                                if ($orserstatus != '' && in_array('payment_review', $orserstatus)) {
+                                                    echo 'selected="selected"';
+                                                }
+                                                ?> value="payment_review">Payment Review</option>
+                                            </select></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <script type="text/javascript">
+                //<![CDATA[
+                var filterFormSubmit = new varienForm('filter_form');
+                function changeStatusOption(optionvalue) {
+                    var filter_date = document.getElementById("hide_for_shipping_date");
+                    var hide_status_for_shipping_date = document.getElementById("hide_status_for_shipping_date");
+                    if (optionvalue == "shipping_date") {
+                        filter_date.className = "no-display";
+                        hide_status_for_shipping_date.style.display = "none";
+                    }
+                    if (optionvalue == "order_date") {
+                        filter_date.className = "";
+                    }
+                }
+                //]]>
+            </script> 
+            <script type="text/javascript"> new FormElementDependenceController({"sales_report_order_statuses": {"sales_report_show_order_statuses": "1"}});</script> 
+            <style type="text/css">
+                .no-display{display:none;}
+            </style>
+        </div>
+
+        <div>
+            <?php  if ($result_order > 0) { ?>
+                <table cellspacing="0" class="actions">
+                    <tbody>
+                        <tr>
+                            <td class="pager">&nbsp;</td>
+                            <td class="export a-right">
+                                <form method="post" action="<?php echo $this->getUrl('*/*/exportCsv') ?>" id="csv_form">
+                                    <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+                                    <input type="hidden" value="<?php echo $from; ?>" id="sales_report_from" name="from" />
+                                    <input type="hidden" value="<?php echo $to; ?>" id="sales_report_to" name="to" />
+                                    <select name="filter_type" class="no-display">
+                                        <option <?php echo ($filter_type == "order_date") ? 'selected="selected"' : ''; ?> value="order_date">Order Date</option>
+                                        <option <?php echo ($filter_type == "shipping_date") ? 'selected="selected"' : ''; ?> value="shipping_date">Shipping Date</option>
+                                    </select>
+
+                                    <?php if (($filter_type == "order_date")) { ?>
+                                        <select name="show_order_statuses" class="no-display">
+                                            <option <?php echo ($show_order_statuses == 0) ? 'selected="selected"' : ''; ?> value="0">Any</option>
+                                            <option <?php echo ($show_order_statuses == 1) ? 'selected="selected"' : ''; ?> value="1">Specified</option>
+                                        </select>
+
+                                        <select multiple="multiple" name="order_statuses[]" class="no-display">
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('pending', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="pending">Pending</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('processing', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="processing">Processing</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('holded', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="holded">On Hold</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('complete', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="complete">Complete</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('closed', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="closed">Closed</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('canceled', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="canceled">Canceled</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('fraud', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="fraud">Suspected Fraud</option>
+                                            <option <?php
+                                            if ($orserstatus != '' && in_array('payment_review', $orserstatus)) {
+                                                echo 'selected="selected"';
+                                            }
+                                            ?> value="payment_review">Payment Review</option>
+                                        </select>
+                                    <?php } ?>      
+                                </form>
+                                <script type="text/javascript">
+                                    //<![CDATA[
+                                    var csvFormSubmit = new varienForm('csv_form');
+                                    //]]>
+                                </script> 
+                            </td>
+                            <td class="filter-actions a-right">
+                                <img class="v-middle" alt="" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB); ?>skin/adminhtml/default/default/images/icon_export.gif">&nbsp; Export to:
+                                <select style="width:8em;" id="sales_order_grid_export" name="sales_order_grid_export">
+                                    <option value="<?php echo $this->getUrl('*/*/exportCsv') ?>">CSV</option>
+                                </select>
+                                <button onclick="csvFormSubmit.submit();" class="scalable task" type="button"><span>Export</span></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php } ?>  
+            <div id="id_<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" class="print_<?php echo Mage::getSingleton('core/session')->getFormKey() ?>">
+                <div class="grid">
+                    <div class="hor-scroll">
+                        <table cellspacing="0" id="id_<?php echo Mage::getSingleton('core/session')->getFormKey() ?>_table" class="data">
+                            <colgroup>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                            </colgroup>
+                            <thead>
+                                <tr class="headings">
+                                    <th class=" no-link"><span class="nobr">Transaction Type</span></th>
+                                    <th class=" no-link"><span class="nobr">Invoice ID</span></th>
+                                    <th class=" no-link"><span class="nobr">Order Id</span></th>
+                                    <th class=" no-link"><span class="nobr">Business Date</span></th>
+                                    <th class=" no-link"><span class="nobr">Card Type</span></th>
+                                    <th class=" no-link"><span class="nobr">Card Number</span></th>
+                                    <th class=" no-link"><span class="nobr">Amount</span></th>                             
+                                    <th class=" no-link"><span class="nobr">Customer Name</span></th>                                                                                                       			  
+                                </tr>
+                            </thead>
+                            <tbody id="">
+                                <?php
+                                if (count($orders_row) > 0) {
+                                    foreach ($orders_row as $singlerows) {
+                                        if (!empty($singlerows)) {
+                                            echo "<tr>";
+                                            foreach ($singlerows as $value) {                                               
+                                                ?>
+                                            <td><?php echo $value; ?></td>
+                                            <?php
+                                        }
+                                        echo "</tr>";
+                                    }
+                                }
+                            } else {
+                                ?>
+                                <tr class="even">
+                                    <td colspan="13" class="empty-text a-center">No records found.</td>
+                                </tr>
+                            <?php } ?>
+                            </tbody>
+
+                            <tbody>
+                                <tr><td colspan="5"><b>Grand Total</b></td></tr>
+                            </tbody>
+                        </table>
+                        <table>
+                            <thead>
+                                <tr class="headings">
+                                    <th class=" no-link"><span class="nobr">Card Type</span></th>
+                                    <th class=" no-link"><span class="nobr">Total Order</span></th>
+                                    <th class=" no-link"><span class="nobr">Sales</span></th>
+                                    <th class=" no-link"><span class="nobr">Refunds</span></th>
+                                    <th class=" no-link"><span class="nobr">Net</span></th>
+                                     <th class=" no-link"><span class="nobr"></span></th>
+                                </tr>
+                            </thead>
+                            <?php if (count($orders_row) > 0): ?>
+                                <tbody>
+                                    <?php
+                                    $cardTotal = 0;
+                                    $amountSummary = 0;
+                                    $refundSummary = 0;
+                                    foreach ($usedCards as $card):
+                                        $cardTotal += $card['total'];
+                                        $amountSummary += $card['amount'];
+                                        $refundSummary += $card['refund'];
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $card['label']; ?></td>
+                                            <td><?php echo $card['total']; ?></td>
+                                            <td><?php echo Mage::helper('core')->currency($card['amount'], true, false); ?></td>
+                                            <td style="color:red;">(<?php echo Mage::helper('core')->currency($card['refund'], true, false); ?>)</td>
+                                            <td><?php echo Mage::helper('core')->currency(($card['amount'] - $card['refund']), true, false); ?></td>
+                                            <td></td>
+                                        </tr>
+                                    <?php endforeach; ?>                                 
+
+                                    <tr>
+                                        <td><?php echo 'Total'; ?></td>
+                                        <td><?php echo $cardTotal; ?></td>
+                                        <td><?php echo Mage::helper('core')->currency(($amountSummary), true, false); ?></td>
+                                        <td style="color:red;">(<?php echo Mage::helper('core')->currency(($refundSummary), true, false); ?>)</td>
+                                        <td><?php echo Mage::helper('core')->currency(($amountSummary - $refundSummary), true, false); ?></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            <?php endif; ?>
+                        </table>					
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

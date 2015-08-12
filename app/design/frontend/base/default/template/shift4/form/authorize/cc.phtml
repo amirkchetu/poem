@@ -1,0 +1,135 @@
+<?php
+/** @var $this Shift4_Payment_Block_Payment_Form_Cc */
+?>
+<?php
+$_code = $this->getMethodCode();
+$_formMessage = $this->getPartialAuthorizationFormMessage();
+
+$_isPartialAuthorization = $this->isPartialAuthorization();
+?>
+<script type="text/javascript">
+//<![CDATA[
+var $j = jQuery.noConflict();
+//]]>
+</script>
+<?php if ($_isPartialAuthorization || $_formMessage): ?>
+    <div class="form-list" id="payment_form_<?php echo $_code; ?>_before" style="display:none;">
+        <?php if ($_formMessage): ?>
+            <?php echo $this->showNoticeMessage($_formMessage) ?>
+        <?php endif; ?>
+
+        <?php if ($this->isPartialAuthorization()): ?>
+            <?php echo $this->getChildHtml('cards') ?>
+            <div class="release-amounts" style="margin: 1.5em 0;">
+                <button class="button" type="button" id="payment-button-cancel"><span><span>Cancel</span></span></button>
+                <span><?php echo $this->__('To cancel your purchase, click Cancel') ?></span>
+            </div>
+            <?php echo $this->showNoticeMessage($this->__('Please enter another credit card number to complete your purchase.')) ?>
+
+            <script type="text/javascript">
+                //<![CDATA[
+                var cancelButtonId = 'payment-button-cancel';
+                var cancelButton = $(cancelButtonId);
+                cancelButton.click = null;
+                Event.observe(cancelButton, 'click', cancelPaymentAuthorizations);
+
+                function cancelPaymentAuthorizations(event, hideConfirm) {
+                    if (!hideConfirm && !confirm('<?php echo $this->getCancelConfirmationMessage() ?>')) {
+                        return;
+                    }
+                    $('cancel-please-wait').show();
+                    new Ajax.Request('<?php echo $this->getCancelUrl() ?>', {
+                        onSuccess: function(transport) {
+                            $('cancel-please-wait').hide();
+                            try {
+                                response = eval('(' + transport.responseText + ')');
+                            } catch (e) {
+                                response = {};
+                            }
+                            if (response.success) {
+                                $(cancelButtonId).remove();
+                                $('checkout-payment-method-load').update(response.update_html);
+                                $j('#payment-buttons-container').hide();
+                                $j('#multishipping-billing-form .buttons-set').hide();
+                                if (checkout) {
+                                    checkout.reloadProgressBlock();
+                                }
+                            } else {
+                                var msg = response.error_message;
+                                if (msg) {
+                                    alert(msg);
+                                }
+                            }
+                        },
+                        parameters: {method_code: '<?php echo $_code; ?>'}
+                    });
+                }
+
+        <?php if ($_message = $this->getPartialAuthorizationConfirmationMessage()): ?>
+                    if (!confirm('<?php echo $_message ?>')) {
+                        cancelPaymentAuthorizations(true, true);
+                    }
+
+        <?php endif; ?>
+                //]]>
+            </script>
+            <span id="cancel-please-wait" class="please-wait" style="display:none">
+                <img src="<?php echo $this->getSkinUrl('images/opc-ajax-loader.gif') ?>" alt="" class="v-middle" /> <?php echo $this->__('Processing...') ?>
+            </span>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+
+<div class="form-list" id="payment_form_<?php echo $_code ?>" style="display:none;">
+    <?php echo $this->getChildHtml('i4go_iframe'); ?>
+
+    <?php if ($this->isCcSaveAllowed()): ?>  
+        <div class="input-box">
+            <label for="<?php echo $_code ?>_cc_save_future"><?php echo $this->__('Save this card for future use') ?></label>
+            <div class="v-fix">
+                <input type="checkbox" id="<?php echo $_code ?>_cc_save_future" name="payment[cc_save_future]" value="Y" />
+            </div>
+        </div>
+    <?php endif; ?>
+
+</div>
+<?php echo $this->_alertIfMultishipPartialPayment($_code); ?>
+<?php $_stored_method = Shift4_Payment_Model_UserCardStored::METHOD_CODE; ?>
+<script type="text/javascript">
+    //<![CDATA[
+    $j(document).ready(function() {
+        var currentMethod = $j("input[type=radio][name=\'payment[method]\']:checked").val();
+        if (currentMethod == '<?php echo $_code; ?>') {
+            // Check if the token already generated
+            $j('#payment-buttons-container').hide();
+            $j('#multishipping-billing-form .buttons-set').hide();
+        }
+
+        $j("input[type=radio][name=\'payment[method]\']").click(function() {
+            var method = $j(this).val();
+            var card_token = $j("div#payment-form-shift4 input:hidden[name=\'payment[card_token]\']").val();
+            if (method == '<?php echo $_code; ?>') {
+                // check if user already have some authorized amount
+                //hide the continue button                        
+                if (card_token == undefined && payment.currentMethod != '<?php echo $_stored_method; ?>') {
+                    $j('#payment-buttons-container').hide();
+                    $j('#multishipping-billing-form .buttons-set').hide();
+                } else {
+                    $j('#payment-buttons-container').show();
+                    $j('#multishipping-billing-form .buttons-set').show();
+                }
+            } else {
+                $j('#payment-buttons-container').show();
+                $j('#multishipping-billing-form .buttons-set').show();
+                // Check if user already authorized some amount
+<?php if ($this->isPartialAuthorization()): ?>
+                    alert('Only one payment option can be used. Your card has already been authorized using the payment option you originally selected, but it was insufficient to complete your purchase.  You can continue the checkout process by entering another payment card with your original payment option selection, or you can switch payment options by clicking Cancel');
+                    $j(this).attr('checked', false);
+                    payment.switchMethod('<?php echo $_code; ?>');
+                    return false;
+<?php endif; ?>
+            }
+        });
+    });
+    //]]>
+</script>

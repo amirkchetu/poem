@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<layout>
+    <salesreport_adminhtml_sales_dailyreport>
+        <reference name="content">
+            <block type="adminhtml/template" name="sales" template="shift4/sales/dailyreport.phtml"/>
+        </reference>
+    </salesreport_adminhtml_sales_dailyreport>
+	
+    <adminhtml_sales_order_creditmemo_new>
+        <reference type="shift4/adminhtml_sales_order_creditmemo_create_items" name="order_items">        
+            <action method="setTemplate">
+                <template>shift4/sales/order/creditmemo/create/items.phtml</template>
+            </action>
+        </reference>
+    </adminhtml_sales_order_creditmemo_new>
+	
+</layout>

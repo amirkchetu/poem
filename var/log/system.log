@@ -1,0 +1,3 @@
+2015-08-11T15:08:24+00:00 ERR (3): Notice: Undefined variable: j  in D:\xampp\htdocs\mage-test\app\code\community\Shift4\Payment\Block\Adminhtml\System\Config\RenderResetButton.php on line 44
+2015-08-11T15:08:24+00:00 ERR (3): Notice: Undefined variable: j  in D:\xampp\htdocs\mage-test\app\code\community\Shift4\Payment\Block\Adminhtml\System\Config\RenderResetButton.php on line 44
+2015-08-11T15:08:24+00:00 ERR (3): Notice: Undefined variable: j  in D:\xampp\htdocs\mage-test\app\code\community\Shift4\Payment\Block\Adminhtml\System\Config\RenderResetButton.php on line 46

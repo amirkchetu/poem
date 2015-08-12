@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<layout>
+    <checkout_onepage_index>
+        <reference name="head">
+            <block type="core/text" name="i4go_iframe">
+                <action method="setText">
+                    <text><![CDATA[
+                        <script src="https://i4m.i4go.com/js/jquery.i4goTrueToken.1.0.0.js" type="text/javascript"></script>
+                    ]]>
+                    </text>
+                </action>               
+            </block>          
+        </reference>
+    </checkout_onepage_index>
+    <customer_account translate="label">
+        <reference name="customer_account_navigation">
+            <action method="addLink" translate="label" module="sales">
+                <name>customer_stored_cards</name>
+                <path>customer/storedcard/</path>
+                <label>My Credit Cards</label>
+            </action> 
+        </reference>
+    </customer_account>
+
+    <customer_storedcard_index>
+        <update handle="customer_account"/>
+        <reference name="my.account.wrapper">
+            <block type="shift4/customer_storedcard" name="customer_storedcard" template="shift4/customer/storedcard.phtml">              
+            </block>
+        </reference>
+    </customer_storedcard_index>
+</layout>

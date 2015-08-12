@@ -1,0 +1,48 @@
+<?php
+/** @var $this Shift4_Payment_Block_Adminhtml_Sales_Order_Payment_Cards */
+?>
+<?php
+$payment = $this->getPayment();
+$usedCards = $this->getUsedCards($payment);
+$_storedCardHelper = Mage::helper('shift4/storedcard');
+$cardIdKey = $this->getCardIdKey();
+?>
+<p>
+    <label class="normal" for="allow_shift4_partial_refund"><?php echo Mage::helper('sales')->__('Partial Refund') ?></label>
+    <input id="allow_shift4_partial_refund" name="creditmemo[allow_partial_refund]" value="1" type="checkbox" />
+</p>
+<span id="shift4_partial_refund_used_cards" style="display:none;">
+    <p>
+        <select id="<?php echo $payment->getMethod(); ?>" name="creditmemo[used_card_id]" onChange="enableRefundButton(this.value)">
+            <?php if (count($usedCards) > 1): ?>
+                <option value=""><?php echo $this->__('--Please Select Card--') ?></option>
+            <?php endif; ?>
+            <?php foreach ($usedCards as $card): ?>
+                <option value="<?php echo $card->getData($cardIdKey) ?>"><?php echo $_storedCardHelper->translateCcType($card->getData('cc_type')) ?> (<?php echo sprintf('xxxx-%s', $card->getData('cc_last4')) ?>)</option>
+            <?php endforeach ?>
+        </select>
+        <input type="hidden" name="creditmemo[card_id_key]" value="<?php echo $cardIdKey; ?>">
+    </p>
+</span>
+<script type="text/javascript">
+            //<![CDATA[      
+            $('allow_shift4_partial_refund').observe('click', function() {
+                if (this.checked == true) {
+                    $('<?php echo $payment->getMethod(); ?>').addClassName('required-entry validate-select');
+                    $('shift4_partial_refund_used_cards').show();
+                } else {
+                    enableElements('submit-button');
+                    $('<?php echo $payment->getMethod(); ?>').removeClassName('required-entry validate-select');
+                    $('shift4_partial_refund_used_cards').hide();
+                }
+            });
+            function enableRefundButton(value) {
+                if (value != '') {
+                    $('<?php echo $payment->getMethod(); ?>').removeClassName('required-entry validate-select');
+                    enableElements('submit-button');
+                } else {
+                    $('<?php echo $payment->getMethod(); ?>').addClassName('required-entry validate-select');
+                }
+            }
+            //]]>
+</script>

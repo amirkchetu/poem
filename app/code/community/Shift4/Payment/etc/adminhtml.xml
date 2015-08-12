@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Magento admin config
+ *
+ * @author Magento
+ */
+-->
+<config>
+    <menu>
+        <report>
+            <children>
+                <shift4_report translate="title" module="payment">
+                    <title>Order Using Shift4 Report</title>
+                    <action>salesreport/adminhtml_sales/dailyReport</action>
+                    <sort_order>90</sort_order>
+                </shift4_report>
+            </children>
+        </report>
+    </menu>
+
+    <acl>
+        <resources>
+            <all>
+                <title>Allow everything</title>
+            </all>
+            <admin>
+                <children>
+                    <report>
+                        <children>
+                            <shift4_report translate="title" module="payment">
+                                <title>Shift4 Daily Payment Reports</title>
+                                <sort_order>60</sort_order>
+                            </shift4_report>
+                        </children>
+                    </report>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>
